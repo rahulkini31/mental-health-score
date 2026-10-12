@@ -1,6 +1,8 @@
 import joblib
 import pandas as pd
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, Field
 from typing import Literal
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,8 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 model = joblib.load('Mental_Health_Model.pkl')
 top_countries = ['Other','India','USA','Canada','Australia','UK','Germany','Mexico','Turkey','France']
 
-app = FastAPI()
+app = FastAPI(title="Mental Health Score API")
 
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,8 +48,23 @@ class PredictionResponse(BaseModel):
 
 
 @app.get('/')
-def greet():
-    return {'Welcome to Sheryians AI School Guys'}
+def serve_index():
+    return FileResponse('index.html')
+
+
+@app.get('/style.css')
+def serve_css():
+    return FileResponse('style.css', media_type='text/css')
+
+
+@app.get('/script.js')
+def serve_js():
+    return FileResponse('script.js', media_type='application/javascript')
+
+
+@app.get('/health')
+def health_check():
+    return {'status': 'healthy'}
 
 
 @app.post('/predict', response_model=PredictionResponse) #6.77777
